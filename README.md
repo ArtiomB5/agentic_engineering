@@ -62,7 +62,7 @@
 
 > Подробное содержание: [chapter-1.md](chapter-1.md)
 
-Прежде чем разбирать анти-паттерны из глав 2–4, нужно освоить фундамент — качество промптов. Шестнадцать принципов этой главы превращают хаотичные запросы в точные спецификации. Каждый раздел объясняет природу ошибки, помогает её распознать и даёт конкретные шаги по исправлению.
+Прежде чем разбирать анти-паттерны из глав 2–4, нужно освоить фундамент — качество промптов. Восемнадцать принципов этой главы превращают хаотичные запросы в точные спецификации. Каждый раздел объясняет природу ошибки, помогает её распознать и даёт конкретные шаги по исправлению.
 
 Материал главы охватывает:
 
@@ -82,6 +82,15 @@
 - [1.14. Low Markdown Output Ratio — Мало markdown в выводе](chapter-1.md#114-low-markdown-output-ratio--мало-markdown-в-выводе)
 - [1.15. Agent Mode for Simple Questions — Агентный режим для простых вопросов](chapter-1.md#115-agent-mode-for-simple-questions--агентный-режим-для-простых-вопросов)
 - [1.16. Context Engineering Gaps — Пробелы в контекстной инженерии](chapter-1.md#116-context-engineering-gaps--пробелы-в-контекстной-инженерии)
+- [1.17. Oversized Tasks — Слишком большие задачи](chapter-1.md#117-oversized-tasks--слишком-большие-задачи)
+- [1.18. Паттерны промптинга, которые работают](chapter-1.md#118-паттерны-промптинга-которые-работают)
+  - [1.18.1. Chain-of-Thought](chapter-1.md#1181-chain-of-thought)
+  - [1.18.2. Few-Shot Prompting](chapter-1.md#1182-few-shot-prompting)
+  - [1.18.3. ReAct — рассуждение плюс действие](chapter-1.md#1183-react--рассуждение-плюс-действие)
+  - [1.18.4. Prompt Chaining — цепочки промптов](chapter-1.md#1184-prompt-chaining--цепочки-промптов)
+  - [1.18.5. Role Prompting — ролевые промпты](chapter-1.md#1185-role-prompting--ролевые-промпты)
+  - [1.18.6. Комбинации паттернов](chapter-1.md#1186-комбинации-паттернов)
+  - [1.18.7. Антипаттерны](chapter-1.md#1187-антипаттерны)
 # Глава 2. Гигиена сессий (Session Hygiene)
 
 > Подробное содержание: [chapter-2.md](chapter-2.md)
@@ -118,7 +127,13 @@
 - [3.5. YOLO Mode — YOLO-режим](chapter-3.md#35-yolo-mode--yolo-режим)
 - [3.6. Unsandboxed Terminal Execution — Выполнение без песочницы](chapter-3.md#36-unsandboxed-terminal-execution--выполнение-без-песочницы)
 - [3.7. Single-Workspace Tunnel Vision — Туннельное зрение](chapter-3.md#38-single-workspace-tunnel-vision--туннельное-зрение)
-- [Общий принцип категории Code Review](chapter-3.md#общий-принцип-категории-code-review)
+- [3.8. Паттерны AI-ревью кода](chapter-3.md#38-паттерны-ai-ревью-кода)
+  - [3.8.1. Многопроходное ревью](chapter-3.md#381-многопроходное-ревью)
+  - [3.8.2. Оценка уверенности](chapter-3.md#382-оценка-уверенности)
+  - [3.8.3. Атакующее ревью (adversarial review)](chapter-3.md#383-атакующее-ревью-adversarial-review)
+  - [3.8.4. Diff-aware vs codebase-aware ревью](chapter-3.md#384-diff-aware-vs-codebase-aware-ревью)
+  - [3.8.5. Проблема автоматизационной предвзятости](chapter-3.md#385-проблема-автоматизационной-предвзятости)
+  - [3.8.6. Что ревьюить с AI, что — самому](chapter-3.md#386-что-ревьюить-с-ai-что--самому)
 
 # Глава 4. Мастерство инструментов (Tool Mastery)
 
@@ -159,6 +174,7 @@
 - [5.3. Агенты (Agents)](chapter-5.md#53-агенты-agents)
 - [5.4. Workflows и кастомные slash-команды](chapter-5.md#54-workflows-и-кастомные-slash-команды)
 - [5.5. Хуки (Hooks)](chapter-5.md#55-хуки-hooks)
+  - [5.5.5. Notification хук — уведомления о событиях агента](chapter-5.md#555-notification-хук--уведомления-о-событиях-агента)
 - [5.6. Банк памяти (Memory Bank)](chapter-5.md#56-банк-памяти-memory-bank)
 - [5.7. Игнорирование файлов: .clineignore](chapter-5.md#57-игнорирование-файлов-clineignore)
 - [5.8. Dev Container — изолированная среда для агентного AI](chapter-5.md#58-dev-container--изолированная-среда-для-агентного-ai)
@@ -199,6 +215,13 @@
 - [7.3. Multi-Agent Teams — координация агентов](chapter-7.md#73-multi-agent-teams--координация-агентов)
 - [7.4. Kanban — параллельный запуск с изолированными worktrees](chapter-7.md#74-kanban--параллельный-запуск-с-изолированными-worktrees)
 - [7.5. Chat Connectors — агент в мессенджерах](chapter-7.md#75-chat-connectors--агент-в-мессенджерах)
+- [7.6. Автономные циклы (Autonomous Cycles)](chapter-7.md#76-автономные-циклы-autonomous-cycles)
+  - [7.6.1. Task-driven autonomous workflow](chapter-7.md#761-task-driven-autonomous-workflow)
+  - [7.6.2. Управление контекстом длинных сессий](chapter-7.md#762-управление-контекстом-длинных-сессий)
+  - [7.6.3. Изоляция контекста — стратегии](chapter-7.md#763-изоляция-контекста--стратегии)
+  - [7.6.4. Параллельные worktrees](chapter-7.md#764-параллельные-worktrees)
+  - [7.6.5. Notification hooks](chapter-7.md#765-notification-hooks)
+  - [7.6.6. Типичные ошибки автономных циклов](chapter-7.md#766-типичные-ошибки-автономных-циклов)
 - [Общий принцип главы](chapter-7.md#общий-принцип-главы)
 
 # Глава 8. Безопасность при работе с AI-агентами
