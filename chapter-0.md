@@ -126,7 +126,7 @@ Basic Compaction — rule-based усечение с приоритетами. А
 
 | Категория | Инструменты |
 |-----------|-------------|
-| Файловая система | read_file, write_to_file, apply_diff, list_files |
+| Файловая система | read_file, write_to_file, replace_in_file, list_files |
 | Поиск | search_files, list_code_definition_names |
 | Терминал | execute_command (bash) |
 | Браузер | browser_action |
