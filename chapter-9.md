@@ -30,13 +30,13 @@
 
 **Проблема: агент нарушает TDD по умолчанию.** Без явной инструкции AI-агент всегда делает одно и то же: пишет реализацию, а затем тесты, которые проходят против этой реализации. Это не TDD. Тесты, написанные после реализации, проверяют то, что уже написано, а не то, что должно быть написано. Они не управляют дизайном — они просто подтверждают то, что уже сделано, и не смогут обнаружить регрессии в будущем.
 
-❌ Поведение агента по умолчанию:  
+Поведение агента по умолчанию:  
    "Реализуй функцию X с тестами"  
    → Агент пишет реализацию  
    → Агент пишет тесты, которые проходят  
    → Тесты не обнаружат регрессии в будущем  
 
-✅ TDD с явным промптом:  
+TDD с явным промптом:  
    "Напиши ПАДАЮЩИЕ тесты для X. НЕ пиши реализацию."  
    → Агент пишет тесты (они падают)  
    → "Теперь напиши минимальный код для прохождения тестов"  
@@ -122,23 +122,23 @@ npm test
 
 ### Автоматический запуск тестов через хуки
 
-Хук PostToolUse запускает тесты после каждого редактирования. Создайте файл `.clinerules/hooks/PostToolUse` (или `~/.ai-agent/hooks/PostToolUse` для глобального применения):
+Хук PostToolUse запускает тесты после каждого редактирования. Создайте файл `.clinerules/hooks/PostToolUse` (или `~/Documents/Cline/Hooks/PostToolUse` для глобального применения):
 
 ```bash
-#!/usr/bin/env bash
-input=$(cat)
-tool_name=$(echo "$input" | jq -r '.postToolUse.toolName')
-success=$(echo "$input" | jq -r '.postToolUse.success')
-
-# Запускать тесты после редактирования файлов
-if [[ "$tool_name" == "write_to_file" || \
-      "$tool_name" == "apply_diff"    || \
-      "$tool_name" == "replace_in_file" ]] && \
-   [[ "$success" == "true" ]]; then
-  test_output=$(npm test --watchAll=false 2>&1 | tail -20)
-  echo "{\"cancel\": false, \"contextModification\": \"Test results after edit:\n$test_output\"}"
-else
-  echo '{"cancel": false}'
+#!/usr/bin/env bash  
+input=$(cat)  
+tool_name=$(echo "$input" | jq -r '.postToolUse.toolName')  
+success=$(echo "$input" | jq -r '.postToolUse.success')  
+  
+# Запускать тесты после редактирования файлов  
+if [[ "$tool_name" == "write_to_file" || \  
+      "$tool_name" == "apply_diff"    || \  
+      "$tool_name" == "replace_in_file" ]] && \  
+   [[ "$success" == "true" ]]; then  
+  test_output=$(npm test --watchAll=false 2>&1 | tail -20)  
+  echo "{\"cancel\": false, \"contextModification\": \"Test results after edit:\n$test_output\"}"  
+else  
+  echo '{"cancel": false}'  
 fi
 ```
 
@@ -279,10 +279,10 @@ SDD: Спецификация → Промпт → Код → Верификац
 
 Задача, провалившая 2+ измерения, требует доработки до передачи агенту.
 
-❌ Слишком широко, неоднозначно:  
+Слишком широко, неоднозначно:  
    «Добавь аутентификацию пользователей в приложение»  
 
-✅ Один вертикальный срез:  
+Один вертикальный срез:  
    «Пользователи могут войти с email + паролем.  
    - POST /auth/login возвращает JWT при успехе, 401 при ошибке  
    - Неверные данные показывают 'Email или пароль неверны' (не уточнять, что именно)  
@@ -511,20 +511,19 @@ Gherkin-сценарий — это контракт между намерени
 Создайте `.clinerules/hooks/PostToolUse`:
 
 ```bash
-#!/usr/bin/env bash
-# PostToolUse: запускать Cucumber после изменений файлов
-input=$(cat)
-tool_name=$(echo "$input" | jq -r '.postToolUse.toolName')
-success=$(echo "$input" | jq -r '.postToolUse.success')
-
-if [[ "$tool_name" == "write_to_file"   || \
-      "$tool_name" == "apply_diff"       || \
-      "$tool_name" == "replace_in_file" ]] && \
-   [[ "$success" == "true" ]]; then
-  cucumber_output=$(npx cucumber-js --format progress 2>&1 | tail -20)
-  echo "{\"cancel\": false, \"contextModification\": \"Cucumber results:\n$cucumber_output\"}"
-else
-  echo '{"cancel": false}'
+#!/usr/bin/env bash  
+# PostToolUse: запускать Cucumber после изменений файлов  
+input=$(cat)  
+tool_name=$(echo "$input" | jq -r '.postToolUse.toolName')  
+success=$(echo "$input" | jq -r '.postToolUse.success')  
+  
+if [[ "$tool_name" == "write_to_file"   || \  
+      "$tool_name" == "replace_in_file" ]] && \  
+   [[ "$success" == "true" ]]; then  
+  cucumber_output=$(npx cucumber-js --format progress 2>&1 | tail -20)  
+  echo "{\"cancel\": false, \"contextModification\": \"Cucumber results:\n$cucumber_output\"}"  
+else  
+  echo '{"cancel": false}'  
 fi
 ```
 

@@ -86,8 +86,8 @@
 
 **Настройка (30 минут)**
 
-- Установить Cline: npm install -g cline [[sdk/apps/cli/README.md:36-38]]
-- Настроить глобальные правила: добавить в ~/Documents/Cline/Rules/ [[docs/customization/cline-rules.mdx:56-62]]
+- Установить Cline: npm install -g cline
+- Настроить глобальные правила: добавить в ~/Documents/Cline/Rules/
 - Проверить загрузку конфигурации проекта: спросить агента "Какой тир у этого проекта?"
 - Прочитать AI Usage Charter (ссылка на ваш документ)
 - Изучить список одобренных MCP: .cline/mcp.json
@@ -321,23 +321,36 @@ Session Logger для аудит-трейла
 ### Скрипт автоматической настройки проекта
 
 ```bash
-#!/bin/bash
-# scripts/setup-project.sh
-# Использование: ./setup-project.sh [starter|standard|strict|regulated]
-
-TIER=${1:-standard}
-CONFIG_REPO="https://github.com/your-org/cline-config"
-
-echo "Настройка регламентации Cline: тир $TIER"
-
-mkdir -p .cline/hooks
-
-# Скопировать конфигурацию тира
-curl -s "$CONFIG_REPO/raw/main/templates/.cline/config.${TIER}.json" \
-  -o .cline/config.json
-
-# Скопировать шаблон правил
-curl -s "$CONFIG_REPO/raw/main"
+#!/bin/bash  
+# scripts/setup-project.sh  
+# Использование: ./setup-project.sh [starter|standard|strict|regulated]  
+  
+TIER=${1:-standard}  
+CONFIG_REPO="https://github.com/your-org/cline-config"  
+  
+echo "Настройка регламентации Cline: тир $TIER"  
+  
+# Создать структуру директорий .cline  
+mkdir -p .cline/rules  
+mkdir -p .cline/skills  
+mkdir -p .cline/hooks  
+mkdir -p .cline/agents  
+  
+# Скопировать правила для тира  
+curl -s "$CONFIG_REPO/raw/main/templates/.cline/rules/${TIER}.md" \  
+  -o .cline/rules/${TIER}.md  
+  
+# Скопировать hooks для тира  
+curl -s "$CONFIG_REPO/raw/main/templates/.cline/hooks/${TIER}.sh" \  
+  -o .cline/hooks/PreToolUse  
+chmod +x .cline/hooks/PreToolUse  
+  
+# Скопировать skills для тира (опционально)  
+curl -s "$CONFIG_REPO/raw/main/templates/.cline/skills/${TIER}/SKILL.md" \  
+  -o .cline/skills/${TIER}/SKILL.md  
+  
+echo "Настройка завершена для тира: $TIER"
+```
 
 ## Практические выводы
 
@@ -347,4 +360,4 @@ curl -s "$CONFIG_REPO/raw/main"
 - **Guardrail Tiers — не всем проектам нужен одинаковый уровень контроля.** Starter для малых команд, Standard для большинства, Strict для production-критичных систем, Regulated для HIPAA/SOC2/PCI. Начните со Standard, ужесточайте по мере необходимости.
 - **Онбординг нового разработчика — 30 минут,** которые окупаются за первую неделю. Без него каждый настраивает агента по-своему, создавая регламентный разрыв, который потом невозможно закрыть без полной переконфигурации.
 - **Внедрение в командах 50+ требует фазового подхода.** Фундамент (недели 1–2) → Внедрение (недели 3–6) → Оптимизация (месяцы 2–3). Попытка развернуть Strict-тир везде в первый день гарантирует сопротивление и обходные пути.
-```
+

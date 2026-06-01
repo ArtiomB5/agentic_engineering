@@ -487,12 +487,14 @@ git diff | cline --thinking high "review for security issues"
 **Plan Mode как встроенный CoT.** Самый мощный CoT-паттерн в Cline — это переключение в Plan Mode перед действием. В Plan Mode Cline читает кодовую базу, задаёт уточняющие вопросы и строит план — не трогая ни одного файла. Это не просто «думать вслух», это думать с доступом к реальному контексту:
 
 ```bash
-# Интерактивный режим (рекомендуется)  
-cline -i "design the migration plan for adding multi-tenancy"  
-# После завершения планирования переключитесь в Act mode в TUI 
+# Вариант 1: Интерактивный режим (рекомендуется)
+cline -i "design the migration plan for adding multi-tenancy"
+# После завершения планирования переключитесь в Act mode в TUI
 
-# Потом выполнить с полным контекстом плана
-cline "implement the multi-tenancy migration"
+# Вариант 2: Возобновление сессии по ID
+cline -p "design the migration plan for adding multi-tenancy"
+# Запомните ID сессии из вывода
+cline --id <session-id> "implement the multi-tenancy migration"
 ```
 
 ---
@@ -534,7 +536,6 @@ test(user): add edge cases for email validation
 ---
 
 ### 1.18.3. ReAct — рассуждение плюс действие
-
 Чередуйте мышление с действиями. Модель рассуждает, действует, наблюдает результат, повторяет.
 
 Cline реализует ReAct нативно через Plan Mode и Act Mode. Это не метафора — это буквально тот же паттерн:
@@ -555,12 +556,11 @@ Plan Mode:
 Act Mode:
   Реализация по плану
 ```
-
 Ключевое свойство ReAct — отлаживаемость. Вы видите, почему Cline принял каждое решение. Если что-то пошло не так, вы видите, где именно сломалась цепочка рассуждений.
 
 Для агентных сценариев в CLI Cline может использовать use_subagents — параллельный ReAct для широкого исследования. Агент сам решает, когда вызывать этот tool:
 
-```bash
+```
 cline "Investigate the performance regression in the API. Analyze recent commits touching the query layer, check if indexes were changed in migrations, and look for N+1 patterns in the affected endpoints. Then synthesize findings and propose a fix."
 ```
 
@@ -605,10 +605,9 @@ echo "$PLAN" | cline --config ~/.cline-sonnet \
 ---
 
 ### 1.18.5. Role Prompting — ролевые промпты
-
 Дайте модели персону. Меняет тон, уровень экспертизы и стиль ответов.
 
-В Cline роль задаётся через `.clinerules`. Это не просто «системный промпт» — это постоянные инструкции, которые применяются ко всем задачам в проекте:
+В Cline роль задаётся через .clinerules. Это не просто «системный промпт» — это постоянные инструкции, которые применяются ко всем задачам в проекте:
 
 ```
 # .clinerules/persona.md
@@ -625,8 +624,7 @@ echo "$PLAN" | cline --config ~/.cline-sonnet \
 Когда ревьюишь код — будь скептичным. Ищи то, что сломается
 под нагрузкой, а не то, что выглядит красиво.
 ```
-
-**Эффективные роли для разных задач:**
+Эффективные роли для разных задач:
 
 | Роль | Эффект |
 |------|--------|
@@ -635,14 +633,15 @@ echo "$PLAN" | cline --config ~/.cline-sonnet \
 | "You are a teacher explaining to a junior" | Упрощает объяснения |
 | "You are the user's pair programmer" | Коллаборативный тон |
 
-Глобальные правила (в `~/Documents/Cline/Rules/`) применяются ко всем проектам. Workspace-правила (в `.clinerules/`) — только к текущему проекту и переопределяют глобальные при конфликте.
+Глобальные правила (в ~/Documents/Cline/Rules/) применяются ко всем проектам. Workspace-правила (в .clinerules/) — только к текущему проекту и переопределяют глобальные при конфликте.
 
-Для одноразовых задач используйте `--system-prompt` в CLI:
+Для одноразовых задач используйте -s или --system в CLI:
 
-```bash
-cline -s "You are a security auditor. Focus only on vulnerabilities." \  
+```
+cline -s "You are a security auditor. Focus only on vulnerabilities." \
   "review this authentication code"
 ```
+
 
 ---
 
