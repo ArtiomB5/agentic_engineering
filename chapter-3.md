@@ -185,8 +185,8 @@ Show me where.
 
 ```bash
 #!/usr/bin/env bash
-# .cline/rules/hooks/PreToolUse
-# chmod +x .cline/rules/hooks/PreToolUse
+# .cline/hooks/PreToolUse
+# chmod +x .cline/hooks/PreToolUse
 
 input=$(cat)
 tool_name=$(echo "$input" | jq -r '.preToolUse.toolName')

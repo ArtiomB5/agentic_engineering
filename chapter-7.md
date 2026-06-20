@@ -225,7 +225,7 @@ cline schedule create "Morning briefing" \
 
 **Multi-Agent Teams** решают это через декомпозицию. Один агент-координатор понимает общую картину, разбивает работу на подзадачи и делегирует их специалистам. Каждый специалист работает в своём изолированном контексте, фокусируясь на одной конкретной задаче. Координатор собирает результаты и управляет зависимостями.
 
-> **Важно:** Teams работают только в CLI, SDK и Kanban. В расширениях VSCode и JetBrains эта функция недоступна.
+> **Важно:** Teams работают только в CLI, SDK и Kanban. В расширениях VS Code и JetBrains эта функция недоступна.
 
 ### Запуск команды
 
@@ -889,11 +889,11 @@ cline --zen --auto-approve true "run full test suite and fix all failures"
 
 ### 7.6.5. Notification hooks
 
-Хук `Notification` срабатывает при `user_attention` (агент ждёт ввода) и `task_complete` (задача завершена). Создайте файл `.cline/rules/hooks/Notification` (без расширения):
+Хук `Notification` срабатывает при `user_attention` (агент ждёт ввода) и `task_complete` (задача завершена). Создайте файл `.cline/hooks/Notification` (без расширения):
 
 ```bash
 #!/usr/bin/env bash
-# .cline/rules/hooks/Notification
+# .cline/hooks/Notification
 # Notification хуки — observation-only: cancel и contextModification игнорируются
 
 INPUT=$(cat)

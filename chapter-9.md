@@ -122,7 +122,7 @@ npm test
 
 ### Автоматический запуск тестов через хуки
 
-Хук PostToolUse запускает тесты после каждого редактирования. Создайте файл `.cline/rules/hooks/PostToolUse` (или `~/Documents/Cline/Hooks/PostToolUse` для глобального применения):
+Хук PostToolUse запускает тесты после каждого редактирования. Создайте файл `.cline/hooks/PostToolUse` (или `~/Documents/Cline/Hooks/PostToolUse` для глобального применения):
 
 ```bash
 #!/usr/bin/env bash  
@@ -145,7 +145,7 @@ fi
 Сделайте файл исполняемым:
 
 ```bash
-chmod +x .cline/rules/hooks/PostToolUse
+chmod +x .cline/hooks/PostToolUse
 ```
 
 Включите хуки в настройках агента.
@@ -508,7 +508,7 @@ Gherkin-сценарий — это контракт между намерени
 
 ### Интеграция с агентом через хук
 
-Создайте `.cline/rules/hooks/PostToolUse`:
+Создайте `.cline/hooks/PostToolUse`:
 
 ```bash
 #!/usr/bin/env bash  
@@ -528,7 +528,7 @@ fi
 ```
 
 ```bash
-chmod +x .cline/rules/hooks/PostToolUse
+chmod +x .cline/hooks/PostToolUse
 ```
 
 ## 9.4. Выбор методологии по типу задачи
